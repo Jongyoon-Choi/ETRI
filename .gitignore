@@ -1,0 +1,10 @@
+# Ignore __pycache__ directories
+**/__pycache__/
+
+# Ignore Dataset directory
+**/Dataset/
+**/data/
+
+# 용량이 커서 제외
+*.dat
+*.pt

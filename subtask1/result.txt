@@ -1,0 +1,20 @@
+MNet 기준 epoch당 약 13분
+100 epoch 예상 소요시간 약 22시간
+
+ResNet 18 (batch 64) 44.7 MB
+epoch 10
+0.533743
+epoch 20
+
+
+MNet (batch 64) 13.7 MB
+epoch 10
+0.50705
+epoch 20
+0.515813
+
+DenseNet (batch 64) 31.2 MB
+epoch 10
+0.53169
+epoch 20
+
