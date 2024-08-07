@@ -3,18 +3,29 @@ MNet 기준 epoch당 약 13분
 
 ResNet 18 (batch 64) 44.7 MB
 epoch 10
-0.533743
+0.53771
 epoch 20
-
+0.53155
 
 MNet (batch 64) 13.7 MB
 epoch 10
 0.50705
 epoch 20
-0.515813
+0.51581
 
-DenseNet (batch 64) 31.2 MB
+MNet v3 (batch 64) 21.2 MB
+epoch 10
+
+epoch 20
+
+
+DenseNet 121 (batch 64) 31.2 MB
 epoch 10
 0.53169
 epoch 20
+0.53621
 
+RegNet (batch 64) 24.8 MB
+epoch 10
+
+epoch 20

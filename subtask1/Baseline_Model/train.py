@@ -39,6 +39,8 @@ import pandas as pd
 import os
 import argparse
 import time
+import random
+import numpy as np
 
 import torch
 import torch.utils.data
@@ -49,8 +51,9 @@ parser = argparse.ArgumentParser()
 
 # parser.add_argument("--version", type=str, default='Baseline_ResNet_emo')
 # parser.add_argument("--version", type=str, default='Baseline_MNet_emo')
-parser.add_argument("--version", type=str, default='DenseNet_emo')
-# parser.add_argument("--version", type=str, default='Inception_emo')
+# parser.add_argument("--version", type=str, default='MNetv3_emo')
+# parser.add_argument("--version", type=str, default='DenseNet_emo')
+parser.add_argument("--version", type=str, default='RegNet_emo')
 
 parser.add_argument('--epochs', default=20, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -61,14 +64,26 @@ parser.add_argument('-b', '--batch-size', default=64, type=int,
                     help='mini-batch size (default: 64), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('--seed', default=42, type=int,
+parser.add_argument('--seed', default=447, type=int,
                     help='seed for initializing training. ')
 
 a, _ = parser.parse_known_args()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+# Seed 고정
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 def main():
     """ The main function for model training. """
+    set_seed(a.seed)
+    
     if os.path.exists('model') is False:
         os.makedirs('model')
 
@@ -78,8 +93,9 @@ def main():
 
     # net = Baseline_ResNet_emo().to(DEVICE)
     # net = Baseline_MNet_emo().to(DEVICE)
-    net = DenseNet_emo().to(DEVICE)
-    # net = Inception_emo().to(DEVICE)
+    # net = MNetv3_emo().to(DEVICE)
+    # net = DenseNet_emo().to(DEVICE)
+    net = RegNet_emo().to(DEVICE)
 
     df = pd.read_csv('./Dataset/Fashion-How24_sub1_train.csv')
     train_dataset = ETRIDataset_emo(df, base_path='./Dataset/train/')
@@ -125,7 +141,7 @@ def main():
             print("learning rate is decayed")
 
 
-        if ((epoch + 1) % 10 == 0):
+        if ((epoch + 1) % 5 == 0):
             print('Saving Model....')
             torch.save(net.state_dict(), save_path + '/model_' + str(epoch + 1) + '.pt')
             print('OK.')

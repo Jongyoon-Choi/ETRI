@@ -34,7 +34,7 @@ Update: 2022.04.20.
 '''
 
 from dataset import ETRIDataset_emo
-from networks import Baseline_ResNet_emo, Baseline_MNet_emo, DenseNet_emo
+from networks import Baseline_ResNet_emo, Baseline_MNet_emo, DenseNet_emo, MNetv3_emo, RegNet_emo
 
 import pandas as pd
 import numpy as np
@@ -51,12 +51,16 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def main():
     """ The main function of the test process for performance measurement. """
     # net = Baseline_ResNet_emo().to(DEVICE)
-    # trained_weights = torch.load('./model/Baseline_ResNet_emo/model_10.pt', map_location=DEVICE)
+    # trained_weights = torch.load('./model/Baseline_ResNet_emo/model_20.pt', map_location=DEVICE)
     # net = Baseline_MNet_emo().to(DEVICE)
     # trained_weights = torch.load('./model/Baseline_MNet_emo/model_20.pt', map_location=DEVICE)
-    net = DenseNet_emo().to(DEVICE)
-    trained_weights = torch.load('./model/DenseNet_emo/model_10.pt', map_location=DEVICE)
-                                 
+    # net = MNetv3_emo().to(DEVICE)
+    # trained_weights = torch.load('./model/MNetv3_emo/model_20.pt', map_location=DEVICE)
+    # net = DenseNet_emo().to(DEVICE)
+    # trained_weights = torch.load('./model/DenseNet_emo/model_20.pt', map_location=DEVICE)
+    net = RegNet_emo().to(DEVICE)
+    trained_weights = torch.load('./model/RegNet_emo/model_20.pt', map_location=DEVICE)
+
     net.load_state_dict(trained_weights)
     
     # 아래 경로는 포함된 샘플(validation set)의 경로로, 실제 추론환경에서의 경로는 task.ipynb를 참고 바랍니다. 

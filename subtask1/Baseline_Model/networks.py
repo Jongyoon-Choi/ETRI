@@ -26,10 +26,13 @@ SOFTWARE.
 
 Update: 2024.04.20.
 '''
+import torch
 import torch.nn as nn
 import torchvision.models as models
 import torch.nn.functional as F
+from torchsummary import summary
 
+# ResNet(baseline)
 class ResExtractor(nn.Module):
     """Feature extractor based on ResNet structure
         Selectable from resnet18 to resnet152
@@ -63,6 +66,31 @@ class ResExtractor(nn.Module):
         return self.model_front(x)
 
 
+class Baseline_ResNet_emo(nn.Module):
+    """ Classification network of emotion categories based on ResNet18 structure. """
+    
+    def __init__(self):
+        super(Baseline_ResNet_emo, self).__init__()
+
+        self.encoder = ResExtractor('18')
+        self.avg_pool = nn.AvgPool2d(kernel_size=7)
+
+        self.daily_linear = nn.Linear(512, 6)
+        self.gender_linear = nn.Linear(512, 5)
+        self.embel_linear = nn.Linear(512, 3)
+
+    def forward(self, x):
+        """ Forward propagation with input 'x' """
+        feat = self.encoder.front(x['image'])
+        flatten = self.avg_pool(feat).squeeze()
+
+        out_daily = self.daily_linear(flatten)
+        out_gender = self.gender_linear(flatten)
+        out_embel = self.embel_linear(flatten)
+
+        return out_daily, out_gender, out_embel
+
+# MNet(baseline)
 class MnExtractor(nn.Module):
     """Feature extractor based on MobileNetv2 structure
     Args:
@@ -82,31 +110,6 @@ class MnExtractor(nn.Module):
         return self.model_front(x)
 
 
-class Baseline_ResNet_emo(nn.Module):
-    """ Classification network of emotion categories based on ResNet18 structure. """
-    
-    def __init__(self):
-        super(Baseline_ResNet_emo, self).__init__()
-
-        self.encoder = ResExtractor('18')
-        self.avg_pool = nn.AvgPool2d(kernel_size=7)
-
-        self.daily_linear = nn.Linear(512, 7)
-        self.gender_linear = nn.Linear(512, 6)
-        self.embel_linear = nn.Linear(512, 3)
-
-    def forward(self, x):
-        """ Forward propagation with input 'x' """
-        feat = self.encoder.front(x['image'])
-        flatten = self.avg_pool(feat).squeeze()
-
-        out_daily = self.daily_linear(flatten)
-        out_gender = self.gender_linear(flatten)
-        out_embel = self.embel_linear(flatten)
-
-        return out_daily, out_gender, out_embel
-
-
 class Baseline_MNet_emo(nn.Module):
     """ Classification network of emotion categories based on MobileNetv2 structure. """
     
@@ -116,8 +119,8 @@ class Baseline_MNet_emo(nn.Module):
         self.encoder = MnExtractor()
         self.avg_pool = nn.AvgPool2d(kernel_size=7)
 
-        self.daily_linear = nn.Linear(1280, 7)
-        self.gender_linear = nn.Linear(1280, 6)
+        self.daily_linear = nn.Linear(1280, 6)
+        self.gender_linear = nn.Linear(1280, 5)
         self.embel_linear = nn.Linear(1280, 3)
 
     def forward(self, x):
@@ -131,6 +134,50 @@ class Baseline_MNet_emo(nn.Module):
 
         return out_daily, out_gender, out_embel
 
+# MNet v3
+class Mnv3Extractor(nn.Module):
+    """Feature extractor based on MobileNet v3 structure
+    Args:
+        pretrained: 'True' if you want to use the pretrained weights provided by Pytorch,
+                    'False' if you want to train from scratch.
+    """
+
+    def __init__(self, pretrained=True):
+        super(Mnv3Extractor, self).__init__()
+
+        self.net = models.mobilenet_v3_large(pretrained=pretrained)
+        self.modules_front = list(self.net.children())[:-2]
+        self.model_front = nn.Sequential(*self.modules_front)
+
+    def front(self, x):
+        """ In the resnet structure, input 'x' passes through conv layers except for fc layers. """
+        return self.model_front(x)
+
+
+class MNetv3_emo(nn.Module):
+    """ Classification network of emotion categories based on MobileNet v3 structure. """
+    
+    def __init__(self):
+        super(MNetv3_emo, self).__init__()
+
+        self.encoder = Mnv3Extractor()
+        self.avg_pool = nn.AvgPool2d(kernel_size=7)
+
+        self.daily_linear = nn.Linear(960, 6)
+        self.gender_linear = nn.Linear(960, 5)
+        self.embel_linear = nn.Linear(960, 3)
+
+    def forward(self, x):
+        """ Forward propagation with input 'x' """
+        feat = self.encoder.front(x['image'])
+        flatten = self.avg_pool(feat).squeeze()
+
+        out_daily = self.daily_linear(flatten)
+        out_gender = self.gender_linear(flatten)
+        out_embel = self.embel_linear(flatten)
+
+        return out_daily, out_gender, out_embel
+    
 # DenseNet
 class DenseExtractor(nn.Module):
     """Feature extractor based on DenseNet structure
@@ -165,6 +212,7 @@ class DenseExtractor(nn.Module):
         """ In the densenet structure, input 'x' passes through conv layers except for fc layers. """
         return self.model_front(x)
     
+
 class DenseNet_emo(nn.Module):
     """ Classification network of emotion categories based on DenseNet121 structure. """
     
@@ -174,8 +222,8 @@ class DenseNet_emo(nn.Module):
         self.encoder = DenseExtractor('121')
         self.avg_pool = nn.AvgPool2d(kernel_size=7)
 
-        self.daily_linear = nn.Linear(1024, 7)
-        self.gender_linear = nn.Linear(1024, 6)
+        self.daily_linear = nn.Linear(1024, 6)
+        self.gender_linear = nn.Linear(1024, 5)
         self.embel_linear = nn.Linear(1024, 3)
 
     def forward(self, x):
@@ -189,46 +237,42 @@ class DenseNet_emo(nn.Module):
 
         return out_daily, out_gender, out_embel
 
-# Inception v3
-class InceptionExtractor(nn.Module):
-    """Feature extractor based on Inception v3 structure
+# RegNet
+class RegExtractor(nn.Module):
+    """Feature extractor based on Regnet structure
     Args:
         pretrained: 'True' if you want to use the pretrained weights provided by Pytorch,
                     'False' if you want to train from scratch.
-        aux_logits, transform_input가 있는데 default 값으로 테스트
     """
 
     def __init__(self, pretrained=True):
-        super(InceptionExtractor, self).__init__()
+        super(RegExtractor, self).__init__()
 
-        self.net = models.inception_v3(pretrained=pretrained)
-        self.modules_front = list(self.net.children())[:-1]
+        self.net = models.regnet_y_800mf(pretrained=pretrained)
+        self.modules_front = list(self.net.children())[:-2]
         self.model_front = nn.Sequential(*self.modules_front)
 
     def front(self, x):
-        """ In the Inception structure, input 'x' passes through conv layers except for fc layers. """
-        print(x.shape)
+        """ In the resnet structure, input 'x' passes through conv layers except for fc layers. """
         return self.model_front(x)
 
-class Inception_emo(nn.Module):
-    """ Classification network of emotion categories based on Inception v3 structure. """
+
+class RegNet_emo(nn.Module):
+    """ Classification network of emotion categories based on Regnet structure. """
     
     def __init__(self):
-        super(Inception_emo, self).__init__()
+        super(RegNet_emo, self).__init__()
 
-        self.encoder = InceptionExtractor()
+        self.encoder = RegExtractor()
         self.avg_pool = nn.AvgPool2d(kernel_size=7)
 
-        self.daily_linear = nn.Linear(2048, 7)
-        self.gender_linear = nn.Linear(2048, 6)
-        self.embel_linear = nn.Linear(2048, 3)
+        self.daily_linear = nn.Linear(784, 6)
+        self.gender_linear = nn.Linear(784, 5)
+        self.embel_linear = nn.Linear(784, 3)
 
     def forward(self, x):
         """ Forward propagation with input 'x' """
-        # input 크기를 299 x 299로 조정
-        image = F.interpolate(x['image'], size=(299, 299), mode='bilinear', align_corners=False)
-        
-        feat = self.encoder.front(image)
+        feat = self.encoder.front(x['image'])
         flatten = self.avg_pool(feat).squeeze()
 
         out_daily = self.daily_linear(flatten)
@@ -236,6 +280,18 @@ class Inception_emo(nn.Module):
         out_embel = self.embel_linear(flatten)
 
         return out_daily, out_gender, out_embel
-    
+
+
+# EfficientNet, mnasnet, mobilenetv3, regnet 테스트 예정
+# C:\Users\admin\anaconda3\Lib\site-packages\torchvision\models
+
 if __name__ == '__main__':
+    # # 모델 로드
+    # model = models.squeezenet1_1(pretrained=True)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # model.to(device)
+
+    # # 모델 요약 출력
+    # summary(model, (3, 224, 224))
+
     pass

@@ -5,6 +5,9 @@
 **/Dataset/
 **/data/
 
+# 제출용 파일
+*.zip
+
 # 용량이 커서 제외
 *.dat
 *.pt
